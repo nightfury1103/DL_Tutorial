@@ -44,22 +44,19 @@ def telemetry(sid, data):
         image = Image.open(BytesIO(base64.b64decode(data["image"])))
         try:
 			# Tiền xử lý ảnh, cắt, reshape
-            image = np.asarray(image)       
+            image = np.asarray(image)
             image = utils.preprocess(image)
             image = np.array([image])
             print('*****************************************************')
             steering_angle = float(model.predict(image, batch_size=1))
-            
+
 			# Tốc độ ta để trong khoảng từ 10 đến 25
             global speed_limit
-            if speed > speed_limit:
-                speed_limit = MIN_SPEED  # giảm tốc độ
-            else:
-                speed_limit = MAX_SPEED
+            speed_limit = MIN_SPEED if speed > speed_limit else MAX_SPEED
             throttle = 1.0 - steering_angle**2 - (speed/speed_limit)**2
 
-            print('{} {} {}'.format(steering_angle, throttle, speed))
-			
+            print(f'{steering_angle} {throttle} {speed}')
+
 			# Gửi lại dữ liệu về góc lái, tốc độ cho phần mềm để ô tô tự lái
             send_control(steering_angle, throttle)
         except Exception as e:
@@ -69,9 +66,9 @@ def telemetry(sid, data):
         if args.image_folder != '':
             timestamp = datetime.utcnow().strftime('%Y_%m_%d_%H_%M_%S_%f')[:-3]
             image_filename = os.path.join(args.image_folder, timestamp)
-            image.save('{}.jpg'.format(image_filename))
+            image.save(f'{image_filename}.jpg')
     else:
-        
+
         sio.emit('manual', data={}, skip_sid=True)
 
 
@@ -111,12 +108,10 @@ if __name__ == '__main__':
     model = load_model(args.model)
 
     if args.image_folder != '':
-        print("Creating image folder at {}".format(args.image_folder))
-        if not os.path.exists(args.image_folder):
-            os.makedirs(args.image_folder)
-        else:
+        print(f"Creating image folder at {args.image_folder}")
+        if os.path.exists(args.image_folder):
             shutil.rmtree(args.image_folder)
-            os.makedirs(args.image_folder)
+        os.makedirs(args.image_folder)
         print("RECORDING THIS RUN ...")
     else:
         print("NOT RECORDING THIS RUN ...")
