@@ -87,16 +87,15 @@ def testGenerator(test_path,num_image = 30,target_size = (256,256),flag_multi_cl
         img = io.imread(os.path.join(test_path,"%d.png"%i),as_gray = as_gray)
         img = img / 255
         img = trans.resize(img,target_size)
-        img = np.reshape(img,img.shape+(1,)) if (not flag_multi_class) else img
-        img = np.reshape(img,(1,)+img.shape)
-        yield img
+        img = img if flag_multi_class else np.reshape(img,img.shape+(1,))
+        yield np.reshape(img,(1,)+img.shape)
 
 
 def geneTrainNpy(image_path,mask_path,flag_multi_class = False,num_class = 2,image_prefix = "image",mask_prefix = "mask",image_as_gray = True,mask_as_gray = True):
-    image_name_arr = glob.glob(os.path.join(image_path,"%s*.png"%image_prefix))
+    image_name_arr = glob.glob(os.path.join(image_path, f"{image_prefix}*.png"))
     image_arr = []
     mask_arr = []
-    for index,item in enumerate(image_name_arr):
+    for item in image_name_arr:
         img = io.imread(item,as_gray = image_as_gray)
         img = np.reshape(img,img.shape + (1,)) if image_as_gray else img
         mask = io.imread(item.replace(image_path,mask_path).replace(image_prefix,mask_prefix),as_gray = mask_as_gray)
